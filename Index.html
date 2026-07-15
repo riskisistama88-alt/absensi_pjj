@@ -1,0 +1,1526 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Absensi PJJ - SMK As-Syafiiyah</title>
+  
+  <!-- Fonts: Inter for UI body & Outfit for Display Headings -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@300;400;500&display=swap" rel="stylesheet">
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <!-- MD5 Library for Password Hashing -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/blueimp-md5/2.19.0/js/md5.min.js"></script>
+
+  <style>
+    /* Design Tokens matching DESIGN-shopify.md (Cream/Light Transactional Track) */
+    :root {
+      --canvas-cream: #fbfbf5;
+      --canvas-light: #ffffff;
+      --ink: #000000;
+      --on-primary: #ffffff;
+      --shade-30: #d4d4d8;
+      --shade-40: #a1a1aa;
+      --shade-50: #71717a;
+      --shade-60: #52525b;
+      --shade-70: #3f3f46;
+      --aloe-10: #c1fbd4;
+      --pistachio-10: #d4f9e0;
+      --hairline-light: #e4e4e7;
+      
+      --font-display: "Outfit", "Helvetica Neue", Helvetica, Arial, sans-serif;
+      --font-body: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      
+      /* Level 3 Soft Halo Drop Shadow */
+      --shadow-halo: 0 8px 8px rgba(0,0,0,0.02), 
+                     0 4px 4px rgba(0,0,0,0.02), 
+                     0 2px 2px rgba(0,0,0,0.01), 
+                     0 0 0 1px rgba(0,0,0,0.04);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--canvas-cream);
+      color: var(--ink);
+      font-family: var(--font-body);
+      font-feature-settings: "ss03"; /* Brand signature geometric characters */
+      font-size: 16px;
+      line-height: 1.5;
+      font-weight: 420;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    h1, h2, h3, h4 {
+      font-family: var(--font-display);
+      font-weight: 300;
+      letter-spacing: 0;
+      color: var(--ink);
+    }
+
+    /* Container */
+    .container {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* Top Navbar */
+    .nav-bar {
+      background-color: var(--canvas-light);
+      border-bottom: 1px solid var(--hairline-light);
+      padding: 16px 0;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .nav-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .nav-brand {
+      font-family: var(--font-display);
+      font-size: 22px;
+      font-weight: 400;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .nav-brand span {
+      font-weight: 300;
+      color: var(--shade-60);
+    }
+
+    /* Badge/Tag */
+    .badge {
+      background-color: var(--aloe-10);
+      color: var(--ink);
+      font-size: 12px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.72px;
+      padding: 4px 12px;
+      border-radius: 9999px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .badge-secondary {
+      background-color: var(--shade-30);
+    }
+
+    /* Cards */
+    .card-premium {
+      background-color: var(--canvas-light);
+      border: 1px solid var(--hairline-light);
+      border-radius: 12px;
+      padding: 32px;
+      box-shadow: var(--shadow-halo);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card-pistachio {
+      background-color: var(--pistachio-10);
+      border: 1px solid transparent;
+    }
+
+    /* Inputs */
+    .form-group {
+      margin-bottom: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-label {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--shade-60);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .input-premium {
+      background-color: var(--canvas-light);
+      color: var(--ink);
+      font-family: var(--font-body);
+      font-size: 15px;
+      font-weight: 400;
+      padding: 12px 14px;
+      border: 1px solid var(--hairline-light);
+      border-radius: 8px;
+      outline: none;
+      transition: border-color 0.2s ease;
+      width: 100%;
+    }
+
+    .input-premium:focus {
+      border-color: var(--ink);
+    }
+
+    /* Custom Dropdown Select */
+    select.input-premium {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      background-size: 18px;
+      padding-right: 40px;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-family: var(--font-body);
+      font-size: 15px;
+      font-weight: 500;
+      padding: 12px 24px;
+      border-radius: 9999px; /* Rounded pill is non-negotiable */
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: none;
+      text-decoration: none;
+      width: auto;
+    }
+
+    .btn-block {
+      display: flex;
+      width: 100%;
+    }
+
+    .btn-primary {
+      background-color: var(--ink);
+      color: var(--on-primary);
+    }
+
+    .btn-primary:active {
+      background-color: var(--shade-70);
+    }
+
+    .btn-outline {
+      background-color: var(--canvas-light);
+      color: var(--ink);
+      border: 1px solid var(--ink);
+    }
+
+    .btn-outline:hover {
+      background-color: var(--canvas-cream);
+    }
+
+    .btn-aloe {
+      background-color: var(--aloe-10);
+      color: var(--ink);
+    }
+
+    .btn-aloe:hover {
+      opacity: 0.9;
+    }
+
+    /* Banner/Notification */
+    .notification {
+      padding: 16px;
+      border-radius: 8px;
+      margin-bottom: 24px;
+      font-size: 14px;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .notification-success {
+      background-color: var(--aloe-10);
+      border: 1px solid rgba(0,0,0,0.05);
+      color: var(--ink);
+    }
+
+    .notification-error {
+      background-color: #fef2f2;
+      border: 1px solid #fee2e2;
+      color: #991b1b;
+    }
+
+    /* Layout structure */
+    .main-content {
+      flex: 1;
+      padding: 40px 0;
+    }
+
+    .auth-container {
+      max-width: 440px;
+      margin: 40px auto;
+    }
+
+    .auth-toggle {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 14px;
+      color: var(--shade-60);
+    }
+
+    .auth-toggle a {
+      color: var(--ink);
+      font-weight: 500;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 32px;
+      align-items: start;
+    }
+
+    @media (max-width: 1024px) {
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Top Stats / Profile bar */
+    .profile-card {
+      margin-bottom: 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .profile-info {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .profile-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background-color: var(--aloe-10);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 20px;
+      text-transform: uppercase;
+      border: 1px solid var(--ink);
+    }
+
+    /* Camera Component */
+    .camera-wrapper {
+      position: relative;
+      width: 100%;
+      border-radius: 8px;
+      overflow: hidden;
+      background-color: var(--ink);
+      aspect-ratio: 4 / 3;
+      border: 1px solid var(--hairline-light);
+    }
+
+    #camera-video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transform: scaleX(-1); /* mirror effect */
+    }
+
+    /* Overlay indicator inside camera */
+    .camera-status {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      z-index: 10;
+    }
+
+    .camera-controls {
+      margin-top: 16px;
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+    }
+
+    /* Hidden elements */
+    #watermark-canvas {
+      display: none;
+    }
+
+    .view-section {
+      display: none;
+    }
+
+    .view-section.active {
+      display: block;
+      animation: fadeIn 0.4s ease forwards;
+    }
+
+    /* Preview Captured Image */
+    .captured-preview {
+      width: 100%;
+      border-radius: 8px;
+      border: 1px solid var(--hairline-light);
+      margin-bottom: 16px;
+      display: none;
+      aspect-ratio: 4 / 3;
+      object-fit: contain;
+      background-color: #000;
+    }
+
+    /* GPS Info Bar */
+    .location-info-bar {
+      margin: 16px 0;
+      background-color: var(--canvas-cream);
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 13px;
+      color: var(--shade-60);
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      border: 1px solid var(--hairline-light);
+    }
+
+    .location-info-bar strong {
+      color: var(--ink);
+    }
+
+    /* History & Student List Tables */
+    .table-container {
+      overflow-x: auto;
+    }
+
+    .history-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 14px;
+    }
+
+    .history-table th {
+      padding: 12px 16px;
+      font-weight: 500;
+      color: var(--shade-60);
+      border-bottom: 1px solid var(--hairline-light);
+      text-transform: uppercase;
+      font-size: 12px;
+      letter-spacing: 0.5px;
+    }
+
+    .history-table td {
+      padding: 16px;
+      border-bottom: 1px solid var(--hairline-light);
+      vertical-align: middle;
+    }
+
+    .history-thumbnail {
+      width: 48px;
+      height: 36px;
+      border-radius: 4px;
+      object-fit: cover;
+      cursor: pointer;
+      border: 1px solid var(--hairline-light);
+      transition: transform 0.2s ease;
+    }
+
+    .history-thumbnail:hover {
+      transform: scale(1.1);
+    }
+
+    /* Full-screen Image Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0, 0, 0, 0.85);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      animation: fadeIn 0.2s ease;
+    }
+
+    .modal-content {
+      max-width: 90%;
+      max-height: 90%;
+      border-radius: 8px;
+      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 24px;
+      right: 24px;
+      color: white;
+      cursor: pointer;
+      background: rgba(0,0,0,0.5);
+      border: none;
+      padding: 8px;
+      border-radius: 50%;
+      display: flex;
+    }
+
+    /* Sub-text under titles */
+    .subtitle {
+      font-size: 14px;
+      color: var(--shade-50);
+      margin-top: 4px;
+      margin-bottom: 24px;
+    }
+
+    /* Spinner */
+    .spinner {
+      animation: rotate 1s linear infinite;
+    }
+
+    .mode-indicator {
+      position: fixed;
+      bottom: 12px;
+      right: 12px;
+      z-index: 1000;
+    }
+
+    @keyframes rotate {
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation -->
+  <nav class="nav-bar">
+    <div class="container nav-container">
+      <div class="nav-brand">
+        <i data-lucide="calendar-check-2"></i>
+        ABSENSI PJJ<span>SMK As-Syafiiyah</span>
+      </div>
+      <div id="nav-actions" style="display: none;">
+        <button onclick="logout()" class="btn btn-outline" style="padding: 8px 16px; font-size: 14px;">
+          <i data-lucide="log-out"></i> Keluar
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Notification Banner -->
+  <div class="container" style="margin-top: 24px; display: none;" id="notification-area">
+    <div class="notification" id="notification-box">
+      <i id="notification-icon" data-lucide="info"></i>
+      <span id="notification-message"></span>
+    </div>
+  </div>
+
+  <main class="main-content">
+    <div class="container">
+
+      <!-- ================= LOGIN VIEW ================= -->
+      <section id="view-login" class="view-section active">
+        <div class="auth-container">
+          <div class="card-premium">
+            <h2 style="font-size: 28px; text-align: center;">Masuk Siswa / Admin</h2>
+            <p class="subtitle" style="text-align: center;">Silakan masukkan username dan password Anda</p>
+            
+            <form id="form-login" onsubmit="handleLogin(event)">
+              <div class="form-group">
+                <label class="form-label" for="login-username">Username</label>
+                <input class="input-premium" type="text" id="login-username" placeholder="cth: budi.rpl / admin" required autocomplete="username">
+              </div>
+              
+              <div class="form-group">
+                <label class="form-label" for="login-password">Password</label>
+                <input class="input-premium" type="password" id="login-password" placeholder="Password Anda" required autocomplete="current-password">
+              </div>
+              
+              <button class="btn btn-primary btn-block" type="submit" id="btn-login-submit">
+                Masuk <i data-lucide="arrow-right"></i>
+              </button>
+            </form>
+
+            <div class="auth-toggle">
+              Belum punya akun? <a onclick="switchView('register')">Registrasi Sekarang</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= REGISTER VIEW ================= -->
+      <section id="view-register" class="view-section">
+        <div class="auth-container">
+          <div class="card-premium">
+            <h2 style="font-size: 28px; text-align: center;">Registrasi Siswa</h2>
+            <p class="subtitle" style="text-align: center;">Daftarkan diri Anda untuk memulai absensi</p>
+            
+            <form id="form-register" onsubmit="handleRegister(event)">
+              <div class="form-group">
+                <label class="form-label" for="reg-name">Nama Lengkap</label>
+                <input class="input-premium" type="text" id="reg-name" placeholder="Nama sesuai absen" required>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="reg-username">Username</label>
+                <input class="input-premium" type="text" id="reg-username" placeholder="Username tanpa spasi" required autocomplete="username">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="reg-class">Kelas</label>
+                <select class="input-premium" id="reg-class" required>
+                  <option value="" disabled selected>Pilih kelas Anda</option>
+                  <option value="XI RPL">XI RPL</option>
+                  <option value="XII RPL">XII RPL</option>
+                </select>
+              </div>
+              
+              <div class="form-group">
+                <label class="form-label" for="reg-password">Password</label>
+                <input class="input-premium" type="password" id="reg-password" placeholder="Min. 6 karakter" minlength="6" required autocomplete="new-password">
+              </div>
+              
+              <button class="btn btn-primary btn-block" type="submit" id="btn-register-submit">
+                Daftar Akun <i data-lucide="user-plus"></i>
+              </button>
+            </form>
+
+            <div class="auth-toggle">
+              Sudah punya akun? <a onclick="switchView('login')">Masuk di sini</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= STUDENT DASHBOARD VIEW ================= -->
+      <section id="view-dashboard" class="view-section">
+        <!-- Profile Banner Card -->
+        <div class="card-premium card-pistachio profile-card">
+          <div class="profile-info">
+            <div class="profile-avatar" id="user-avatar-initial">S</div>
+            <div>
+              <h2 id="welcome-name" style="font-size: 24px;">Nama Siswa</h2>
+              <div style="display: flex; gap: 8px; margin-top: 4px;">
+                <span class="badge" id="welcome-class">XI RPL</span>
+                <span class="badge badge-secondary" id="device-gps-status">Membaca GPS...</span>
+              </div>
+            </div>
+          </div>
+          <div>
+            <h3 id="current-clock" style="font-size: 28px; font-weight: 400; text-align: right;">12:00:00</h3>
+            <p id="current-date" style="font-size: 13px; color: var(--shade-60); text-align: right;">Rabu, 15 Juli 2026</p>
+          </div>
+        </div>
+
+        <div class="dashboard-grid">
+          <!-- Column 1: Attendance Capture Panel -->
+          <div class="card-premium">
+            <h3 style="font-size: 20px; font-weight: 500; margin-bottom: 6px;">Kirim Kehadiran</h3>
+            <p class="subtitle" style="margin-bottom: 20px;">Ambil foto selfie di tempat belajar Anda untuk absen hari ini</p>
+            
+            <!-- Live Camera or Preview captured image -->
+            <div id="camera-container">
+              <div class="camera-wrapper">
+                <div class="camera-status">
+                  <span class="badge badge-secondary" style="background: rgba(0,0,0,0.6); color: white; border: 1px solid rgba(255,255,255,0.2);">
+                    <i data-lucide="video" style="width: 12px; height: 12px;"></i> LIVE CAMERA
+                  </span>
+                </div>
+                <video id="camera-video" autoplay playsinline muted></video>
+              </div>
+              
+              <div class="camera-controls">
+                <button onclick="capturePhoto()" class="btn btn-primary" id="btn-capture">
+                  <i data-lucide="camera"></i> Tangkap Selfie
+                </button>
+              </div>
+            </div>
+
+            <!-- Preview panel after capture -->
+            <div id="preview-container" style="display: none;">
+              <img id="selfie-preview" class="captured-preview" alt="Preview Absen">
+              
+              <div class="location-info-bar">
+                <i data-lucide="map-pin" style="flex-shrink: 0; margin-top: 2px;"></i>
+                <div>
+                  <strong>Lokasi Terbaca:</strong>
+                  <div id="preview-location-text">Mendapatkan koordinat...</div>
+                  <div id="preview-address-text" style="margin-top: 4px; font-style: italic;">Mengambil alamat lengkap...</div>
+                </div>
+              </div>
+
+              <div style="display: flex; gap: 12px; justify-content: center;">
+                <button onclick="retakePhoto()" class="btn btn-outline">
+                  <i data-lucide="refresh-cw"></i> Foto Ulang
+                </button>
+                <button onclick="submitAttendanceData()" class="btn btn-aloe" id="btn-submit-attendance">
+                  <i data-lucide="send"></i> Kirim Absen
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Column 2: History Log -->
+          <div class="card-premium" style="display: flex; flex-direction: column; min-height: 400px;">
+            <h3 style="font-size: 20px; font-weight: 500; margin-bottom: 6px;">Riwayat Absensi</h3>
+            <p class="subtitle" style="margin-bottom: 20px;">Daftar kehadiran Anda selama PJJ</p>
+
+            <div class="table-container" style="flex: 1;">
+              <table class="history-table">
+                <thead>
+                  <tr>
+                    <th>Foto</th>
+                    <th>Waktu / Detail</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="history-list">
+                  <!-- History items inserted here dynamically -->
+                  <tr>
+                    <td colspan="3" style="text-align: center; color: var(--shade-50); padding: 40px 0;">
+                      Belum ada riwayat absensi.
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= ADMIN DASHBOARD VIEW ================= -->
+      <section id="view-admin" class="view-section">
+        <!-- Admin Profile Banner Card -->
+        <div class="card-premium card-pistachio profile-card">
+          <div class="profile-info">
+            <div class="profile-avatar" style="background-color: var(--ink); color: var(--on-primary);" id="admin-avatar-initial">AD</div>
+            <div>
+              <h2 id="admin-welcome-name" style="font-size: 24px;">Administrator</h2>
+              <div style="display: flex; gap: 8px; margin-top: 4px;">
+                <span class="badge" style="background-color: var(--ink); color: var(--on-primary); font-size: 11px;">PANEL KONTROL ADMIN</span>
+              </div>
+            </div>
+          </div>
+          <div>
+            <h3 id="admin-current-clock" style="font-size: 28px; font-weight: 400; text-align: right;">12:00:00</h3>
+            <p id="admin-current-date" style="font-size: 13px; color: var(--shade-60); text-align: right;">Rabu, 15 Juli 2026</p>
+          </div>
+        </div>
+
+        <div class="card-premium">
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 24px; flex-wrap: wrap;">
+            <div>
+              <h3 style="font-size: 20px; font-weight: 500; margin-bottom: 4px;">Daftar Siswa Terdaftar</h3>
+              <p class="subtitle" style="margin: 0;">Lihat detail profil siswa yang sudah melakukan registrasi manual</p>
+            </div>
+            
+            <div class="form-group" style="margin: 0; min-width: 220px;">
+              <label class="form-label" for="admin-class-filter">Filter Kelas</label>
+              <select class="input-premium" id="admin-class-filter" onchange="loadStudentList()">
+                <option value="all">Semua Kelas</option>
+                <option value="XI RPL">XI RPL</option>
+                <option value="XII RPL">XII RPL</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="table-container">
+            <table class="history-table">
+              <thead>
+                <tr>
+                  <th style="width: 60px;">No</th>
+                  <th>Nama Lengkap</th>
+                  <th>Username</th>
+                  <th>Kelas</th>
+                  <th>Tanggal Terdaftar</th>
+                </tr>
+              </thead>
+              <tbody id="student-list">
+                <!-- Students list inserted here dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- Modal for viewing full-size photo -->
+  <div id="photo-modal" class="modal" onclick="closeModal()">
+    <button class="modal-close" onclick="closeModal()"><i data-lucide="x"></i></button>
+    <img id="modal-image" class="modal-content" src="" alt="Full-size Selfie" onclick="event.stopPropagation()">
+  </div>
+
+  <!-- Mode Badge Indicator (Local Mock vs Live GAS) -->
+  <div class="mode-indicator" id="mode-badge">
+    <span class="badge" style="background: #1e2c31; color: white;">
+      <i data-lucide="cpu" style="width: 12px; height: 12px;"></i> Mock Mode
+    </span>
+  </div>
+
+  <!-- Canvas used to draw selfie + location metadata watermarks -->
+  <canvas id="watermark-canvas" width="640" height="480"></canvas>
+
+  <script>
+    // Google Apps Script Web App Endpoint URL
+    const LIVE_GAS_URL = "https://script.google.com/macros/s/AKfycbxKBQv9c5QSxsRtlvUa7zBb8Y0edAgsZ_N13NG4FWNGBt0Rp1s39xvdScySDtOCX3zcHw/exec";
+
+    // App State
+    let currentUser = null;
+    let locationCoords = { latitude: null, longitude: null };
+    let addressName = "";
+    let capturedBlobBase64 = null;
+    let streamRef = null;
+    let isMockMode = false;
+
+    // Detect environment (Automatically run Live Mode on web domains; fallback to Mock Mode on local files)
+    function detectEnvironment() {
+      if (window.location.protocol === 'file:') {
+        isMockMode = true;
+        document.getElementById('mode-badge').style.display = 'block';
+        console.log("Running in Mock Mode (Local browser storage)");
+        initMockData();
+      } else {
+        isMockMode = false;
+        document.getElementById('mode-badge').style.display = 'none';
+        console.log("Running in Live Mode connecting to Apps Script API");
+      }
+    }
+
+    // Initialize mock accounts/logs in localStorage for local testing fallback
+    function initMockData() {
+      if (!localStorage.getItem('pjj_users')) {
+        const defaultUsers = [
+          {
+            username: "siswa",
+            password_md5: "5f4dcc3b5aa765d61d8327deb882cf99", // 'password'
+            name: "Budi Siswanto",
+            className: "XI RPL",
+            created_at: new Date().toLocaleString('id-ID')
+          },
+          {
+            username: "admin",
+            password_md5: "0192023a7bbd73250516f069df18b500", // 'admin123'
+            name: "Administrator",
+            className: "ADMIN",
+            created_at: new Date().toLocaleString('id-ID')
+          }
+        ];
+        localStorage.setItem('pjj_users', JSON.stringify(defaultUsers));
+      } else {
+        let users = JSON.parse(localStorage.getItem('pjj_users'));
+        if (!users.some(u => u.username === "admin")) {
+          users.push({
+            username: "admin",
+            password_md5: "0192023a7bbd73250516f069df18b500", // 'admin123'
+            name: "Administrator",
+            className: "ADMIN",
+            created_at: new Date().toLocaleString('id-ID')
+          });
+          localStorage.setItem('pjj_users', JSON.stringify(users));
+        }
+      }
+      if (!localStorage.getItem('pjj_attendance')) {
+        localStorage.setItem('pjj_attendance', JSON.stringify([]));
+      }
+    }
+
+    // Centralized API Caller - Handles both Live fetch queries and Mock LocalStorage triggers
+    async function callAPI(action, data) {
+      if (isMockMode) {
+        return executeMockCall(action, data);
+      } else {
+        const payload = {
+          action: action,
+          data: data
+        };
+        try {
+          const response = await fetch(LIVE_GAS_URL, {
+            method: 'POST',
+            // Omit custom Content-Type header to bypass CORS preflight OPTIONS block
+            body: JSON.stringify(payload)
+          });
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          return await response.json();
+        } catch(err) {
+          console.error("API Error: ", err);
+          return { success: false, message: "Koneksi server gagal: " + err.toString() };
+        }
+      }
+    }
+
+    // Handles Mock Mode LocalStorage CRUD
+    function executeMockCall(action, data) {
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          let users = JSON.parse(localStorage.getItem('pjj_users')) || [];
+          let attendance = JSON.parse(localStorage.getItem('pjj_attendance')) || [];
+
+          if (action === "register") {
+            if (users.some(u => u.username.toLowerCase() === data.username.toLowerCase())) {
+              resolve({ success: false, message: `Username "${data.username}" sudah terdaftar.` });
+            } else {
+              users.push({
+                username: data.username,
+                password_md5: data.passwordMd5,
+                name: data.name,
+                className: data.className,
+                created_at: new Date().toLocaleString('id-ID')
+              });
+              localStorage.setItem('pjj_users', JSON.stringify(users));
+              resolve({ success: true, message: "Registrasi Mock berhasil! Silakan masuk." });
+            }
+          } 
+          
+          else if (action === "login") {
+            const user = users.find(u => u.username.toLowerCase() === data.username.toLowerCase());
+            if (user && user.password_md5 === data.passwordMd5) {
+              resolve({
+                success: true,
+                user: {
+                  username: user.username,
+                  name: user.name,
+                  className: user.className
+                }
+              });
+            } else {
+              resolve({ success: false, message: "Username atau password salah (Mock)." });
+            }
+          } 
+          
+          else if (action === "submitAttendance") {
+            const user = users.find(u => u.username.toLowerCase() === data.username.toLowerCase());
+            const newLog = {
+              id: "ATT_MOCK_" + Date.now(),
+              username: data.username,
+              name: user ? user.name : data.username,
+              className: user ? user.className : "XI RPL",
+              timestamp: new Date().toLocaleString('id-ID'),
+              latitude: data.locationData.latitude,
+              longitude: data.locationData.longitude,
+              address: addressName || "Alamat Simulasi",
+              selfieUrl: data.base64Image,
+              status: "Hadir"
+            };
+            attendance.unshift(newLog);
+            localStorage.setItem('pjj_attendance', JSON.stringify(attendance));
+            resolve({ success: true, message: "Absen berhasil dikirim secara lokal!" });
+          } 
+          
+          else if (action === "getAttendanceHistory") {
+            const studentLogs = attendance.filter(log => log.username.toLowerCase() === data.username.toLowerCase());
+            resolve({ success: true, history: studentLogs });
+          } 
+          
+          else if (action === "getStudentsByClass") {
+            const adminUser = users.find(u => u.username.toLowerCase() === data.adminUsername.toLowerCase());
+            if (!adminUser || adminUser.className !== "ADMIN" || adminUser.password_md5 !== data.adminPasswordMd5) {
+              resolve({ success: false, message: "Akses ditolak. Token tidak valid." });
+              return;
+            }
+            let students = users.filter(u => u.className !== "ADMIN");
+            if (data.classFilter !== "all") {
+              students = students.filter(s => s.className === data.classFilter);
+            }
+            resolve({ success: true, students: students });
+          } 
+          
+          else {
+            resolve({ success: false, message: "Aksi tidak didukung di Mock Mode." });
+          }
+        }, 600);
+      });
+    }
+
+    // Initialize the app on load
+    window.addEventListener('DOMContentLoaded', () => {
+      detectEnvironment();
+      lucide.createIcons();
+      
+      // Clock refresh
+      updateClock();
+      setInterval(updateClock, 1000);
+
+      // Start fetching GPS coordinates immediately
+      requestGPSLocation();
+      
+      // Auto login check if sessionStorage exists
+      const savedUser = sessionStorage.getItem('pjj_current_user');
+      if (savedUser) {
+        currentUser = JSON.parse(savedUser);
+        if (currentUser.className === "ADMIN") {
+          setupAdminDashboard();
+        } else {
+          setupDashboard();
+        }
+      }
+    });
+
+    // Real-time Clock on dashboards
+    function updateClock() {
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+      const dateStr = now.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+      
+      const clockEl = document.getElementById('current-clock');
+      const dateEl = document.getElementById('current-date');
+      const adminClockEl = document.getElementById('admin-current-clock');
+      const adminDateEl = document.getElementById('admin-current-date');
+      
+      const formattedTime = timeStr.replace(/\./g, ':');
+      if (clockEl) clockEl.innerText = formattedTime;
+      if (dateEl) dateEl.innerText = dateStr;
+      if (adminClockEl) adminClockEl.innerText = formattedTime;
+      if (adminDateEl) adminDateEl.innerText = dateStr;
+    }
+
+    // GPS Geolocator
+    function requestGPSLocation() {
+      const gpsStatusBadge = document.getElementById('device-gps-status');
+      
+      if (!navigator.geolocation) {
+        if (gpsStatusBadge) {
+          gpsStatusBadge.className = "badge badge-secondary";
+          gpsStatusBadge.innerHTML = `<i data-lucide="alert-triangle" style="width:12px;height:12px"></i> GPS Tidak Didukung`;
+        }
+        lucide.createIcons();
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          locationCoords.latitude = position.coords.latitude;
+          locationCoords.longitude = position.coords.longitude;
+          
+          if (gpsStatusBadge) {
+            gpsStatusBadge.className = "badge";
+            gpsStatusBadge.innerHTML = `<i data-lucide="map-pin" style="width:12px;height:12px"></i> GPS Aktif`;
+          }
+          lucide.createIcons();
+          
+          // Trigger address search
+          fetchAddress(locationCoords.latitude, locationCoords.longitude);
+        },
+        (error) => {
+          console.error("GPS Error: ", error);
+          if (gpsStatusBadge) {
+            gpsStatusBadge.className = "badge badge-secondary";
+            gpsStatusBadge.innerHTML = `<i data-lucide="shield-alert" style="width:12px;height:12px"></i> GPS Terblokir`;
+          }
+          lucide.createIcons();
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      );
+    }
+
+    // Fetch readable address name
+    function fetchAddress(lat, lng) {
+      if (isMockMode) {
+        setTimeout(() => {
+          addressName = "Jl. Kampung Melayu No. 24, Jatinegara, Jakarta Timur (Mock Address)";
+          updateAddressDisplay();
+        }, 800);
+      } else {
+        // Fetch via live geocoder on submit (or a quick geocode action)
+        addressName = `Koordinat: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+        updateAddressDisplay();
+      }
+    }
+
+    function updateAddressDisplay() {
+      const locText = document.getElementById('preview-location-text');
+      const addrText = document.getElementById('preview-address-text');
+      if (locText && locationCoords.latitude) locText.innerText = `${locationCoords.latitude.toFixed(6)}, ${locationCoords.longitude.toFixed(6)}`;
+      if (addrText) addrText.innerText = addressName;
+    }
+
+    // Show alert notifications
+    function showAlert(message, type = 'success') {
+      const area = document.getElementById('notification-area');
+      const box = document.getElementById('notification-box');
+      const msg = document.getElementById('notification-message');
+      const icon = document.getElementById('notification-icon');
+      
+      area.style.display = 'block';
+      box.className = `notification notification-${type}`;
+      msg.innerText = message;
+      
+      icon.setAttribute('data-lucide', type === 'success' ? 'check-circle' : 'alert-circle');
+      lucide.createIcons();
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+
+      setTimeout(() => {
+        area.style.display = 'none';
+      }, 6000);
+    }
+
+    // View Switcher
+    function switchView(viewName) {
+      document.getElementById('notification-area').style.display = 'none';
+      document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
+      
+      if (viewName !== 'dashboard') {
+        stopCamera();
+      }
+
+      if (viewName === 'login' || viewName === 'register') {
+        document.getElementById('nav-actions').style.display = 'none';
+      } else {
+        document.getElementById('nav-actions').style.display = 'block';
+      }
+
+      if (viewName === 'login') {
+        document.getElementById('view-login').classList.add('active');
+      } else if (viewName === 'register') {
+        document.getElementById('view-register').classList.add('active');
+      } else if (viewName === 'dashboard') {
+        document.getElementById('view-dashboard').classList.add('active');
+        startCamera();
+      } else if (viewName === 'admin') {
+        document.getElementById('view-admin').classList.add('active');
+      }
+    }
+
+    // Setup student dashboard
+    function setupDashboard() {
+      document.getElementById('welcome-name').innerText = currentUser.name;
+      document.getElementById('welcome-class').innerText = currentUser.className;
+      
+      const initials = currentUser.name.split(' ').map(n => n[0]).join('').substring(0, 2);
+      document.getElementById('user-avatar-initial').innerText = initials;
+      
+      switchView('dashboard');
+      loadHistory();
+    }
+
+    // Setup admin control dashboard
+    function setupAdminDashboard() {
+      document.getElementById('admin-welcome-name').innerText = currentUser.name;
+      
+      const initials = currentUser.name.split(' ').map(n => n[0]).join('').substring(0, 2);
+      document.getElementById('admin-avatar-initial').innerText = initials;
+      
+      switchView('admin');
+      loadStudentList();
+    }
+
+    // ================= CAMERA HANDLERS =================
+    function startCamera() {
+      const video = document.getElementById('camera-video');
+      document.getElementById('camera-container').style.display = 'block';
+      document.getElementById('preview-container').style.display = 'none';
+      
+      navigator.mediaDevices.getUserMedia({
+        video: { 
+          width: { ideal: 640 }, 
+          height: { ideal: 480 },
+          facingMode: "user" 
+        }, 
+        audio: false 
+      })
+      .then(stream => {
+        streamRef = stream;
+        video.srcObject = stream;
+      })
+      .catch(err => {
+        console.error("Camera access failed: ", err);
+        showAlert("Kamera tidak dapat diakses. Pastikan izin kamera telah diberikan.", "error");
+      });
+    }
+
+    function stopCamera() {
+      if (streamRef) {
+        streamRef.getTracks().forEach(track => track.stop());
+        streamRef = null;
+      }
+    }
+
+    // Draw frame to canvas and stamp watermarks on top
+    function capturePhoto() {
+      const video = document.getElementById('camera-video');
+      const canvas = document.getElementById('watermark-canvas');
+      const ctx = canvas.getContext('2d');
+
+      if (!streamRef) {
+        showAlert("Kamera tidak aktif. Harap muat ulang.", "error");
+        return;
+      }
+
+      ctx.save();
+      ctx.translate(canvas.width, 0);
+      ctx.scale(-1, 1);
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      ctx.restore();
+
+      const now = new Date();
+      const dateStr = now.toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' });
+      const timeStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      const fullTimestamp = `${dateStr} - ${timeStr}`;
+
+      const latStr = locationCoords.latitude ? locationCoords.latitude.toFixed(6) : "GPS Bermasalah";
+      const lngStr = locationCoords.longitude ? locationCoords.longitude.toFixed(6) : "GPS Bermasalah";
+      const coordinateText = `GPS: ${latStr}, ${lngStr}`;
+      const addressText = addressName || "Mengambil detail alamat...";
+
+      const overlayHeight = 120;
+      ctx.fillStyle = "rgba(0, 0, 0, 0.65)";
+      ctx.fillRect(0, canvas.height - overlayHeight, canvas.width, overlayHeight);
+
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.2)";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(0, canvas.height - overlayHeight);
+      ctx.lineTo(canvas.width, canvas.height - overlayHeight);
+      ctx.stroke();
+
+      ctx.fillStyle = "#ffffff";
+      ctx.textAlign = "left";
+
+      ctx.font = "bold 15px Inter, Arial, sans-serif";
+      ctx.fillText("SMK AS-SYAFIIYAH - PRESENSI PJJ", 20, canvas.height - 90);
+
+      ctx.font = "500 13px Inter, Arial, sans-serif";
+      ctx.fillText(`Nama : ${currentUser.name} (${currentUser.className})`, 20, canvas.height - 68);
+      ctx.fillText(`Waktu: ${fullTimestamp}`, 20, canvas.height - 48);
+
+      ctx.font = "400 12px Inter, Arial, sans-serif";
+      ctx.fillStyle = "#c1fbd4"; 
+      ctx.fillText(`${coordinateText}`, 20, canvas.height - 28);
+      
+      ctx.fillStyle = "#e4e4e7"; 
+      wrapText(ctx, addressText, 20, canvas.height - 12, canvas.width - 40, 14);
+
+      capturedBlobBase64 = canvas.toDataURL('image/jpeg', 0.85);
+      
+      document.getElementById('selfie-preview').src = capturedBlobBase64;
+      document.getElementById('camera-container').style.display = 'none';
+      document.getElementById('preview-container').style.display = 'block';
+      
+      updateAddressDisplay();
+      stopCamera();
+    }
+
+    function wrapText(context, text, x, y, maxWidth, lineHeight) {
+      let words = text.split(' ');
+      let line = '';
+
+      for (let n = 0; n < words.length; n++) {
+        let testLine = line + words[n] + ' ';
+        let metrics = context.measureText(testLine);
+        let testWidth = metrics.width;
+        if (testWidth > maxWidth && n > 0) {
+          context.fillText(line, x, y);
+          line = words[n] + ' ';
+          y += lineHeight;
+        }
+        else {
+          line = testLine;
+        }
+      }
+      context.fillText(line, x, y);
+    }
+
+    function retakePhoto() {
+      capturedBlobBase64 = null;
+      startCamera();
+    }
+
+    // ================= API SUBMISSIONS =================
+
+    // Handle user registration
+    async function handleRegister(event) {
+      event.preventDefault();
+      
+      const name = document.getElementById('reg-name').value;
+      const username = document.getElementById('reg-username').value.trim();
+      const className = document.getElementById('reg-class').value;
+      const password = document.getElementById('reg-password').value;
+      
+      const btn = document.getElementById('btn-register-submit');
+      const originalText = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = `<i data-lucide="loader-2" class="spinner" style="width: 16px; height: 16px;"></i> Mendaftarkan...`;
+      lucide.createIcons();
+
+      const passwordHash = md5(password);
+      
+      if (username.toLowerCase() === "admin") {
+        showAlert("Username 'admin' dilindungi sistem.", "error");
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        lucide.createIcons();
+        return;
+      }
+
+      const response = await callAPI("register", {
+        name: name,
+        username: username,
+        className: className,
+        passwordMd5: passwordHash
+      });
+
+      btn.disabled = false;
+      btn.innerHTML = originalText;
+      lucide.createIcons();
+
+      if (response.success) {
+        showAlert(response.message, "success");
+        document.getElementById('form-register').reset();
+        switchView('login');
+      } else {
+        showAlert(response.message, "error");
+      }
+    }
+
+    // Handle user Login
+    async function handleLogin(event) {
+      event.preventDefault();
+
+      const username = document.getElementById('login-username').value.trim();
+      const passwordRaw = document.getElementById('login-password').value;
+      
+      const btn = document.getElementById('btn-login-submit');
+      const originalText = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = `<i data-lucide="loader-2" class="spinner" style="width: 16px; height: 16px;"></i> Menghubungkan...`;
+      lucide.createIcons();
+
+      const passwordHash = md5(passwordRaw);
+
+      const response = await callAPI("login", {
+        username: username,
+        passwordMd5: passwordHash
+      });
+
+      btn.disabled = false;
+      btn.innerHTML = originalText;
+      lucide.createIcons();
+
+      if (response.success) {
+        currentUser = response.user;
+        currentUser.passwordHash = passwordHash;
+        sessionStorage.setItem('pjj_current_user', JSON.stringify(currentUser));
+        
+        if (currentUser.className === "ADMIN") {
+          setupAdminDashboard();
+          showAlert("Masuk sebagai Admin berhasil!", "success");
+        } else {
+          setupDashboard();
+          showAlert(`Selamat datang kembali, ${currentUser.name}!`, "success");
+        }
+      } else {
+        showAlert(response.message, "error");
+      }
+    }
+
+    // Submit Attendance Log
+    async function submitAttendanceData() {
+      const btn = document.getElementById('btn-submit-attendance');
+      const originalText = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = `<i data-lucide="loader-2" class="spinner" style="width: 16px; height: 16px;"></i> Mengirim Absen...`;
+      lucide.createIcons();
+
+      if (!capturedBlobBase64) {
+        showAlert("Silakan ambil selfie Anda terlebih dahulu.", "error");
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        lucide.createIcons();
+        return;
+      }
+
+      const response = await callAPI("submitAttendance", {
+        username: currentUser.username,
+        base64Image: capturedBlobBase64,
+        locationData: locationCoords
+      });
+
+      btn.disabled = false;
+      btn.innerHTML = originalText;
+      lucide.createIcons();
+
+      if (response.success) {
+        showAlert("Absensi berhasil disimpan! Foto disimpan ke Google Drive.", "success");
+        capturedBlobBase64 = null;
+        startCamera();
+        loadHistory();
+      } else {
+        showAlert("Gagal absen: " + response.message, "error");
+      }
+    }
+
+    // Load history table for student
+    async function loadHistory() {
+      const response = await callAPI("getAttendanceHistory", {
+        username: currentUser.username
+      });
+
+      if (response.success) {
+        renderHistoryRows(response.history);
+      } else {
+        console.error("Gagal mengambil riwayat: ", response.message);
+      }
+    }
+
+    function renderHistoryRows(logs) {
+      const historyList = document.getElementById('history-list');
+      
+      if (!logs || logs.length === 0) {
+        historyList.innerHTML = `
+          <tr>
+            <td colspan="3" style="text-align: center; color: var(--shade-50); padding: 40px 0;">
+              Belum ada riwayat absensi.
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      historyList.innerHTML = logs.map(log => `
+        <tr>
+          <td>
+            <img src="${log.selfieUrl}" class="history-thumbnail" alt="Selfie Absen" onclick="openPhotoModal('${log.selfieUrl}')">
+          </td>
+          <td>
+            <div style="font-weight: 500;">${log.timestamp}</div>
+            <div style="font-size: 12px; color: var(--shade-60); margin-top: 4px; max-width: 250px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${log.address}">
+              <i data-lucide="map-pin" style="width: 10px; height: 10px; display: inline; vertical-align: middle;"></i> ${log.address}
+            </div>
+          </td>
+          <td>
+            <span class="badge" style="background-color: var(--aloe-10); color: var(--ink); border: 1px solid rgba(0,0,0,0.05)">
+              ${log.status}
+            </span>
+          </td>
+        </tr>
+      `).join('');
+      
+      lucide.createIcons();
+    }
+
+    // ================= ADMIN FUNCTIONS =================
+
+    // Load list of students for Admin view
+    async function loadStudentList() {
+      const studentList = document.getElementById('student-list');
+      const filter = document.getElementById('admin-class-filter').value;
+      
+      studentList.innerHTML = `
+        <tr>
+          <td colspan="5" style="text-align: center; color: var(--shade-50); padding: 40px 0;">
+            <i data-lucide="loader-2" class="spinner" style="width: 24px; height: 24px; display: inline-block;"></i> Memuat data...
+          </td>
+        </tr>
+      `;
+      lucide.createIcons();
+
+      const response = await callAPI("getStudentsByClass", {
+        adminUsername: currentUser.username,
+        adminPasswordMd5: currentUser.passwordHash,
+        classFilter: filter
+      });
+
+      if (response.success) {
+        renderStudentRows(response.students);
+      } else {
+        showAlert("Gagal memuat daftar siswa: " + response.message, "error");
+      }
+    }
+
+    function renderStudentRows(students) {
+      const studentList = document.getElementById('student-list');
+      
+      if (!students || students.length === 0) {
+        studentList.innerHTML = `
+          <tr>
+            <td colspan="5" style="text-align: center; color: var(--shade-50); padding: 40px 0;">
+              Tidak ada siswa terdaftar untuk filter ini.
+            </td>
+          </tr>
+        `;
+        return;
+      }
+      
+      studentList.innerHTML = students.map((student, idx) => `
+        <tr>
+          <td>${idx + 1}</td>
+          <td style="font-weight: 500;">${student.name}</td>
+          <td><code>${student.username}</code></td>
+          <td>
+            <span class="badge" style="background-color: var(--pistachio-10); border: 1px solid rgba(0,0,0,0.05); color: var(--ink);">
+              ${student.className}
+            </span>
+          </td>
+          <td style="color: var(--shade-60);">${student.createdAt || student.created_at || "-"}</td>
+        </tr>
+      `).join('');
+      
+      lucide.createIcons();
+    }
+
+    // Modal view details
+    function openPhotoModal(imageUrl) {
+      const modal = document.getElementById('photo-modal');
+      const modalImg = document.getElementById('modal-image');
+      modalImg.src = imageUrl;
+      modal.style.display = "flex";
+    }
+
+    function closeModal() {
+      document.getElementById('photo-modal').style.display = "none";
+    }
+
+    // Logout
+    function logout() {
+      sessionStorage.removeItem('pjj_current_user');
+      currentUser = null;
+      capturedBlobBase64 = null;
+      stopCamera();
+      
+      document.getElementById('form-login').reset();
+      document.getElementById('form-register').reset();
+      
+      switchView('login');
+      showAlert("Anda telah keluar dari aplikasi.", "success");
+    }
+  </script>
+</body>
+</html>
