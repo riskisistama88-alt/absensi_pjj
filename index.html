@@ -872,7 +872,9 @@
         try {
           const response = await fetch(LIVE_GAS_URL, {
             method: 'POST',
-            // Omit custom Content-Type header to bypass CORS preflight OPTIONS block
+            headers: {
+              'Content-Type': 'text/plain;charset=utf-8'
+            },
             body: JSON.stringify(payload)
           });
           if (!response.ok) {
