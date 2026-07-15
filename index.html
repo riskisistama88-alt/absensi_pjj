@@ -747,21 +747,51 @@
           </div>
         </div>
 
-        <div class="card-premium">
+        <!-- Tab 1: Rekap Absensi (Kehadiran & Foto) -->
+        <div class="card-premium" style="margin-bottom: 32px;">
           <div style="display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 24px; flex-wrap: wrap;">
             <div>
-              <h3 style="font-size: 20px; font-weight: 500; margin-bottom: 4px;">Daftar Siswa Terdaftar</h3>
-              <p class="subtitle" style="margin: 0;">Lihat detail profil siswa yang sudah melakukan registrasi manual</p>
+              <h3 style="font-size: 20px; font-weight: 500; margin-bottom: 4px;">Rekap Absensi Kehadiran Siswa</h3>
+              <p class="subtitle" style="margin: 0;">Lihat foto selfie dan detail lokasi koordinat absensi siswa</p>
             </div>
             
             <div class="form-group" style="margin: 0; min-width: 220px;">
               <label class="form-label" for="admin-class-filter">Filter Kelas</label>
-              <select class="input-premium" id="admin-class-filter" onchange="loadStudentList()">
+              <select class="input-premium" id="admin-class-filter" onchange="refreshAdminDashboard()">
                 <option value="all">Semua Kelas</option>
                 <option value="XI RPL">XI RPL</option>
                 <option value="XII RPL">XII RPL</option>
               </select>
             </div>
+          </div>
+
+          <div class="table-container">
+            <table class="history-table">
+              <thead>
+                <tr>
+                  <th style="width: 80px;">Foto</th>
+                  <th>Siswa & Kelas</th>
+                  <th>Waktu / Detail Lokasi</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="admin-attendance-list">
+                <!-- Attendance logs will be loaded dynamically -->
+                <tr>
+                  <td colspan="4" style="text-align: center; color: var(--shade-50); padding: 40px 0;">
+                    Belum ada siswa yang absen.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Tab 2: Direktori Siswa Terdaftar -->
+        <div class="card-premium">
+          <div style="margin-bottom: 24px;">
+            <h3 style="font-size: 20px; font-weight: 500; margin-bottom: 4px;">Direktori Siswa Terdaftar</h3>
+            <p class="subtitle" style="margin: 0;">Lihat detail profil siswa yang sudah melakukan registrasi manual</p>
           </div>
 
           <div class="table-container">
@@ -973,6 +1003,19 @@
             }
             resolve({ success: true, students: students });
           } 
+
+          else if (action === "getAllAttendanceLogs") {
+            const adminUser = users.find(u => u.username.toLowerCase() === data.adminUsername.toLowerCase());
+            if (!adminUser || adminUser.className !== "ADMIN" || adminUser.password_md5 !== data.adminPasswordMd5) {
+              resolve({ success: false, message: "Akses ditolak. Token tidak valid." });
+              return;
+            }
+            let logs = attendance;
+            if (data.classFilter !== "all") {
+              logs = logs.filter(l => l.className === data.classFilter);
+            }
+            resolve({ success: true, logs: logs });
+          }
           
           else {
             resolve({ success: false, message: "Aksi tidak didukung di Mock Mode." });
@@ -1070,7 +1113,6 @@
           updateAddressDisplay();
         }, 800);
       } else {
-        // Fetch via live geocoder on submit (or a quick geocode action)
         addressName = `Koordinat: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
         updateAddressDisplay();
       }
@@ -1148,10 +1190,16 @@
       document.getElementById('admin-welcome-name').innerText = currentUser.name;
       
       const initials = currentUser.name.split(' ').map(n => n[0]).join('').substring(0, 2);
-      document.getElementById('admin-avatar-initial').innerText = initials;
+      const adminAvatar = document.getElementById('admin-avatar-initial');
+      if (adminAvatar) adminAvatar.innerText = initials;
       
       switchView('admin');
+      refreshAdminDashboard();
+    }
+
+    function refreshAdminDashboard() {
       loadStudentList();
+      loadAttendanceLogs();
     }
 
     // ================= CAMERA HANDLERS =================
@@ -1511,6 +1559,75 @@
             </span>
           </td>
           <td style="color: var(--shade-60);">${student.createdAt || student.created_at || "-"}</td>
+        </tr>
+      `).join('');
+      
+      lucide.createIcons();
+    }
+
+    // Load Rekap Absensi (Kehadiran & Foto) for Admin Panel
+    async function loadAttendanceLogs() {
+      const attendanceList = document.getElementById('admin-attendance-list');
+      const filter = document.getElementById('admin-class-filter').value;
+      
+      attendanceList.innerHTML = `
+        <tr>
+          <td colspan="4" style="text-align: center; color: var(--shade-50); padding: 40px 0;">
+            <i data-lucide="loader-2" class="spinner" style="width: 24px; height: 24px; display: inline-block;"></i> Memuat rekap absen...
+          </td>
+        </tr>
+      `;
+      lucide.createIcons();
+
+      const response = await callAPI("getAllAttendanceLogs", {
+        adminUsername: currentUser.username,
+        adminPasswordMd5: currentUser.passwordHash,
+        classFilter: filter
+      });
+
+      if (response.success) {
+        renderAdminAttendanceRows(response.logs);
+      } else {
+        showAlert("Gagal memuat rekap absen: " + response.message, "error");
+      }
+    }
+
+    function renderAdminAttendanceRows(logs) {
+      const attendanceList = document.getElementById('admin-attendance-list');
+      
+      if (!logs || logs.length === 0) {
+        attendanceList.innerHTML = `
+          <tr>
+            <td colspan="4" style="text-align: center; color: var(--shade-50); padding: 40px 0;">
+              Belum ada siswa yang absen hari ini untuk filter ini.
+            </td>
+          </tr>
+        `;
+        return;
+      }
+      
+      attendanceList.innerHTML = logs.map(log => `
+        <tr>
+          <td>
+            <img src="${log.selfieUrl}" class="history-thumbnail" alt="Selfie Absen" onclick="openPhotoModal('${log.selfieUrl}')">
+          </td>
+          <td>
+            <div style="font-weight: 500;">${log.name}</div>
+            <div style="font-size: 12px; color: var(--shade-60); margin-top: 2px;">
+              ${log.className} (<code>${log.username}</code>)
+            </div>
+          </td>
+          <td>
+            <div style="font-weight: 500;">${log.timestamp}</div>
+            <div style="font-size: 12px; color: var(--shade-60); margin-top: 4px; max-width: 320px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${log.address}">
+              <i data-lucide="map-pin" style="width: 10px; height: 10px; display: inline; vertical-align: middle;"></i> ${log.address}
+            </div>
+          </td>
+          <td>
+            <span class="badge" style="background-color: var(--aloe-10); color: var(--ink); border: 1px solid rgba(0,0,0,0.05)">
+              ${log.status}
+            </span>
+          </td>
         </tr>
       `).join('');
       
