@@ -530,8 +530,8 @@
   <nav class="nav-bar">
     <div class="container nav-container">
       <div class="nav-brand">
-        <i data-lucide="calendar-check-2"></i>
-        ABSENSI PJJ<span>SMK As-Syafiiyah</span>
+        <img src="logo.png" alt="Logo" style="height: 32px; width: auto; object-fit: contain; vertical-align: middle;">
+        <span style="font-weight: 400; margin-left: 8px;">ABSENSI PJJ</span><span style="color: var(--shade-60); font-weight: 300;"> SMK As-Syafiiyah</span>
       </div>
       <div id="nav-actions" style="display: none;">
         <button onclick="logout()" class="btn btn-outline" style="padding: 8px 16px; font-size: 14px;">
@@ -556,6 +556,9 @@
       <section id="view-login" class="view-section active">
         <div class="auth-container">
           <div class="card-premium">
+            <div style="text-align: center; margin-bottom: 24px;">
+              <img src="logo.png" alt="Logo SMK As-Syafiiyah" style="height: 80px; width: auto; object-fit: contain;">
+            </div>
             <h2 style="font-size: 28px; text-align: center;">Masuk Siswa</h2>
             <p class="subtitle" style="text-align: center;">Silakan masukkan username dan password Anda</p>
             
@@ -586,6 +589,9 @@
       <section id="view-register" class="view-section">
         <div class="auth-container">
           <div class="card-premium">
+            <div style="text-align: center; margin-bottom: 24px;">
+              <img src="logo.png" alt="Logo SMK As-Syafiiyah" style="height: 80px; width: auto; object-fit: contain;">
+            </div>
             <h2 style="font-size: 28px; text-align: center;">Registrasi Siswa</h2>
             <p class="subtitle" style="text-align: center;">Daftarkan diri Anda untuk memulai absensi</p>
             
@@ -799,6 +805,10 @@
   <script>
     // Google Apps Script Web App Endpoint URL
     const LIVE_GAS_URL = "https://script.google.com/macros/s/AKfycbwoQNckkDzc8VvU8w8QLEmkwwEc8Fw8Yuwlr2SYBYxBvWk0XJP_EQkdHG-SnSRFQoh3Eg/exec";
+
+    // Preload school logo for canvas watermark
+    const schoolLogo = new Image();
+    schoolLogo.src = 'logo.png';
 
     // App State
     let currentUser = null;
@@ -1218,6 +1228,15 @@
 
       ctx.font = "bold 15px Inter, Arial, sans-serif";
       ctx.fillText("SMK AS-SYAFIIYAH - PRESENSI PJJ", 20, canvas.height - 90);
+
+      // Draw school logo on the right side of the watermark bar
+      try {
+        if (schoolLogo.complete && schoolLogo.naturalWidth !== 0) {
+          ctx.drawImage(schoolLogo, canvas.width - 90, canvas.height - 95, 70, 70);
+        }
+      } catch(logoErr) {
+        console.error("Gagal menggambar logo di canvas: ", logoErr);
+      }
 
       ctx.font = "500 13px Inter, Arial, sans-serif";
       ctx.fillText(`Nama : ${currentUser.name} (${currentUser.className})`, 20, canvas.height - 68);
