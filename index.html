@@ -450,6 +450,27 @@
       transform: scale(1.1);
     }
 
+    .history-thumbnail-placeholder {
+      width: 48px;
+      height: 36px;
+      border-radius: 4px;
+      background-color: var(--canvas-cream);
+      border: 1px solid var(--hairline-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--shade-50);
+      transition: all 0.2s ease;
+    }
+
+    .history-thumbnail-placeholder:hover {
+      background-color: var(--pistachio-10);
+      color: var(--ink);
+      border-color: var(--ink);
+      transform: scale(1.05);
+    }
+
     /* Full-screen Image Modal */
     .modal {
       display: none;
@@ -859,6 +880,19 @@
               </tbody>
             </table>
           </div>
+
+          <!-- Pagination Bar -->
+          <div class="pagination-bar" style="display: flex; justify-content: flex-end; align-items: center; gap: 16px; margin-top: 20px; font-size: 14px; color: var(--shade-60);">
+            <span id="pagination-info">0–0 dari 0</span>
+            <div style="display: flex; gap: 8px;">
+              <button class="btn btn-outline" id="btn-prev-page" onclick="changeAdminPage(-1)" style="padding: 6px 12px; border-radius: 6px;" title="10 Sebelumnya">
+                <i data-lucide="chevron-left" style="width: 16px; height: 16px;"></i>
+              </button>
+              <button class="btn btn-outline" id="btn-next-page" onclick="changeAdminPage(1)" style="padding: 6px 12px; border-radius: 6px;" title="10 Selanjutnya">
+                <i data-lucide="chevron-right" style="width: 16px; height: 16px;"></i>
+              </button>
+            </div>
+          </div>
         </div>
 
         <!-- Tab 2: Direktori Siswa Terdaftar -->
@@ -922,6 +956,8 @@
     let streamRef = null;
     let isMockMode = false;
     let allAdminLogs = [];
+    let adminCurrentPage = 1;
+    const ITEMS_PER_PAGE = 10;
 
     // Detect environment (Automatically run Live Mode on web domains; fallback to Mock Mode on local files)
     function detectEnvironment() {
@@ -1276,6 +1312,7 @@
     }
 
     function refreshAdminDashboard() {
+      adminCurrentPage = 1;
       loadStudentList();
       loadAttendanceLogs();
     }
@@ -1564,7 +1601,9 @@
       historyList.innerHTML = logs.map(log => `
         <tr>
           <td>
-            <img src="${log.selfieUrl}" class="history-thumbnail" alt="Selfie Absen" onclick="openPhotoModal('${log.selfieUrl}')">
+            <div class="history-thumbnail-placeholder" onclick="loadAndOpenPhotoModal('${log.id}')" title="Lihat Foto Selfie">
+              <i data-lucide="image" style="width: 16px; height: 16px;"></i>
+            </div>
           </td>
           <td>
             <div style="font-weight: 500;">${log.timestamp}</div>
@@ -1709,7 +1748,9 @@
         todayListXI.innerHTML = todayXI.map(log => `
           <tr>
             <td>
-              <img src="${log.selfieUrl}" class="history-thumbnail" style="width: 36px; height: 27px;" alt="Selfie" onclick="openPhotoModal('${log.selfieUrl}')">
+              <div class="history-thumbnail-placeholder" style="width: 36px; height: 27px;" onclick="loadAndOpenPhotoModal('${log.id}')" title="Lihat Foto Selfie">
+                <i data-lucide="image" style="width: 14px; height: 14px;"></i>
+              </div>
             </td>
             <td>
               <div style="font-weight: 500; font-size: 13px;">${log.name}</div>
@@ -1737,7 +1778,9 @@
         todayListXII.innerHTML = todayXII.map(log => `
           <tr>
             <td>
-              <img src="${log.selfieUrl}" class="history-thumbnail" style="width: 36px; height: 27px;" alt="Selfie" onclick="openPhotoModal('${log.selfieUrl}')">
+              <div class="history-thumbnail-placeholder" style="width: 36px; height: 27px;" onclick="loadAndOpenPhotoModal('${log.id}')" title="Lihat Foto Selfie">
+                <i data-lucide="image" style="width: 14px; height: 14px;"></i>
+              </div>
             </td>
             <td>
               <div style="font-weight: 500; font-size: 13px;">${log.name}</div>
@@ -1750,7 +1793,7 @@
         `).join('');
       }
       
-      // 2. Process Historical Logs Table
+      // 2. Process Historical Logs Table with Pagination (10 items per page)
       let filteredLogs = allAdminLogs;
       
       // Class Filter
@@ -1765,8 +1808,42 @@
         });
       }
       
-      renderAdminAttendanceRows(filteredLogs);
+      // Pagination calculations
+      const totalItems = filteredLogs.length;
+      const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE) || 1;
+      
+      if (adminCurrentPage > totalPages) adminCurrentPage = totalPages;
+      if (adminCurrentPage < 1) adminCurrentPage = 1;
+      
+      const startIndex = (adminCurrentPage - 1) * ITEMS_PER_PAGE;
+      const endIndex = Math.min(startIndex + ITEMS_PER_PAGE, totalItems);
+      const paginatedLogs = filteredLogs.slice(startIndex, endIndex);
+      
+      renderAdminAttendanceRows(paginatedLogs);
+      
+      // Update Pagination UI Bar
+      const infoEl = document.getElementById('pagination-info');
+      const prevBtn = document.getElementById('btn-prev-page');
+      const nextBtn = document.getElementById('btn-next-page');
+      
+      if (infoEl) {
+        if (totalItems === 0) {
+          infoEl.innerText = "0–0 dari 0";
+        } else {
+          infoEl.innerText = `${startIndex + 1}–${endIndex} dari ${totalItems}`;
+        }
+      }
+      
+      if (prevBtn) prevBtn.disabled = (adminCurrentPage <= 1);
+      if (nextBtn) nextBtn.disabled = (adminCurrentPage >= totalPages || totalItems === 0);
+      
       lucide.createIcons();
+    }
+
+    // Function to navigate between pagination pages
+    function changeAdminPage(direction) {
+      adminCurrentPage += direction;
+      applyAdminFilters();
     }
 
     // Helper to extract a standardized YYYY-MM-DD date string from the log timestamp
@@ -1839,7 +1916,9 @@
       attendanceList.innerHTML = logs.map(log => `
         <tr>
           <td>
-            <img src="${log.selfieUrl}" class="history-thumbnail" alt="Selfie Absen" onclick="openPhotoModal('${log.selfieUrl}')">
+            <div class="history-thumbnail-placeholder" onclick="loadAndOpenPhotoModal('${log.id}')" title="Lihat Foto Selfie">
+              <i data-lucide="image" style="width: 16px; height: 16px;"></i>
+            </div>
           </td>
           <td>
             <div style="font-weight: 500;">${log.name}</div>
@@ -1864,16 +1943,78 @@
       lucide.createIcons();
     }
 
+    // Selfie photo cache to prevent redundant network requests
+    const selfieCache = {};
+
+    async function loadAndOpenPhotoModal(logId) {
+      // 1. Open the modal immediately and show a loading spinner
+      const modal = document.getElementById('photo-modal');
+      const modalImg = document.getElementById('modal-image');
+      
+      // Temporary spinner container inside modal
+      let spinner = document.getElementById('modal-spinner');
+      if (!spinner) {
+        spinner = document.createElement('div');
+        spinner.id = 'modal-spinner';
+        spinner.style.color = 'white';
+        spinner.style.textAlign = 'center';
+        spinner.style.fontSize = '16px';
+        spinner.style.display = 'flex';
+        spinner.style.flexDirection = 'column';
+        spinner.style.alignItems = 'center';
+        spinner.style.gap = '12px';
+        spinner.innerHTML = `
+          <i data-lucide="loader-2" class="spinner" style="width: 48px; height: 48px;"></i>
+          <div>Memuat foto absensi...</div>
+        `;
+        modal.appendChild(spinner);
+      }
+      
+      modalImg.style.display = 'none';
+      spinner.style.display = 'flex';
+      modal.style.display = 'flex';
+      lucide.createIcons();
+
+      // 2. Check if we already have the photo in memory cache
+      if (selfieCache[logId]) {
+        modalImg.src = selfieCache[logId];
+        spinner.style.display = 'none';
+        modalImg.style.display = 'block';
+        return;
+      }
+
+      // 3. Fetch from API on-demand
+      const response = await callAPI("getAttendanceSelfie", { id: logId });
+      
+      if (response.success && response.selfieUrl) {
+        selfieCache[logId] = response.selfieUrl;
+        modalImg.src = response.selfieUrl;
+        spinner.style.display = 'none';
+        modalImg.style.display = 'block';
+      } else {
+        spinner.style.display = 'none';
+        showAlert("Gagal memuat foto: " + (response.message || "Foto kosong."), "error");
+        closeModal();
+      }
+    }
+
     // Modal view details
     function openPhotoModal(imageUrl) {
       const modal = document.getElementById('photo-modal');
       const modalImg = document.getElementById('modal-image');
+      
+      const spinner = document.getElementById('modal-spinner');
+      if (spinner) spinner.style.display = 'none';
+      
       modalImg.src = imageUrl;
+      modalImg.style.display = 'block';
       modal.style.display = "flex";
     }
 
     function closeModal() {
       document.getElementById('photo-modal').style.display = "none";
+      const spinner = document.getElementById('modal-spinner');
+      if (spinner) spinner.style.display = 'none';
     }
 
     // Logout
