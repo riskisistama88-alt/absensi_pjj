@@ -559,13 +559,13 @@
             <div style="text-align: center; margin-bottom: 24px;">
               <img src="logo.png" alt="Logo SMK As-Syafiiyah" style="height: 80px; width: auto; object-fit: contain;">
             </div>
-            <h2 style="font-size: 28px; text-align: center;">Masuk Siswa</h2>
+            <h2 style="font-size: 28px; text-align: center;">Masuk Siswa / Admin</h2>
             <p class="subtitle" style="text-align: center;">Silakan masukkan username dan password Anda</p>
             
             <form id="form-login" onsubmit="handleLogin(event)">
               <div class="form-group">
                 <label class="form-label" for="login-username">Username</label>
-                <input class="input-premium" type="text" id="login-username" placeholder="cth: zikr" required autocomplete="username">
+                <input class="input-premium" type="text" id="login-username" placeholder="cth: budi.rpl / admin" required autocomplete="username">
               </div>
               
               <div class="form-group">
@@ -830,7 +830,7 @@
   </div>
 
   <!-- Canvas used to draw selfie + location metadata watermarks -->
-  <canvas id="watermark-canvas" width="640" height="480"></canvas>
+  <canvas id="watermark-canvas" width="500" height="375"></canvas>
 
   <script>
     // Google Apps Script Web App Endpoint URL
@@ -1260,7 +1260,7 @@
       const coordinateText = `GPS: ${latStr}, ${lngStr}`;
       const addressText = addressName || "Mengambil detail alamat...";
 
-      const overlayHeight = 120;
+      const overlayHeight = 90;
       ctx.fillStyle = "rgba(0, 0, 0, 0.65)";
       ctx.fillRect(0, canvas.height - overlayHeight, canvas.width, overlayHeight);
 
@@ -1274,30 +1274,30 @@
       ctx.fillStyle = "#ffffff";
       ctx.textAlign = "left";
 
-      ctx.font = "bold 15px Inter, Arial, sans-serif";
-      ctx.fillText("SMK AS-SYAFIIYAH - PRESENSI PJJ", 20, canvas.height - 90);
+      ctx.font = "bold 13px Inter, Arial, sans-serif";
+      ctx.fillText("SMK AS-SYAFIIYAH - PRESENSI PJJ", 20, canvas.height - 72);
 
       // Draw school logo on the right side of the watermark bar
       try {
         if (schoolLogo.complete && schoolLogo.naturalWidth !== 0) {
-          ctx.drawImage(schoolLogo, canvas.width - 90, canvas.height - 95, 70, 70);
+          ctx.drawImage(schoolLogo, canvas.width - 70, canvas.height - 75, 55, 55);
         }
       } catch(logoErr) {
         console.error("Gagal menggambar logo di canvas: ", logoErr);
       }
 
-      ctx.font = "500 13px Inter, Arial, sans-serif";
-      ctx.fillText(`Nama : ${currentUser.name} (${currentUser.className})`, 20, canvas.height - 68);
-      ctx.fillText(`Waktu: ${fullTimestamp}`, 20, canvas.height - 48);
+      ctx.font = "500 11px Inter, Arial, sans-serif";
+      ctx.fillText(`Nama : ${currentUser.name} (${currentUser.className})`, 20, canvas.height - 54);
+      ctx.fillText(`Waktu: ${fullTimestamp}`, 20, canvas.height - 38);
 
-      ctx.font = "400 12px Inter, Arial, sans-serif";
+      ctx.font = "400 10px Inter, Arial, sans-serif";
       ctx.fillStyle = "#c1fbd4"; 
-      ctx.fillText(`${coordinateText}`, 20, canvas.height - 28);
+      ctx.fillText(`${coordinateText}`, 20, canvas.height - 22);
       
       ctx.fillStyle = "#e4e4e7"; 
-      wrapText(ctx, addressText, 20, canvas.height - 12, canvas.width - 40, 14);
+      wrapText(ctx, addressText, 20, canvas.height - 8, canvas.width - 90, 12);
 
-      capturedBlobBase64 = canvas.toDataURL('image/jpeg', 0.85);
+      capturedBlobBase64 = canvas.toDataURL('image/jpeg', 0.4);
       
       document.getElementById('selfie-preview').src = capturedBlobBase64;
       document.getElementById('camera-container').style.display = 'none';
@@ -1531,6 +1531,9 @@
         renderStudentRows(response.students);
       } else {
         showAlert("Gagal memuat daftar siswa: " + response.message, "error");
+        if (response.message && response.message.indexOf("Akses ditolak") !== -1) {
+          setTimeout(logout, 2500);
+        }
       }
     }
 
@@ -1589,6 +1592,9 @@
         renderAdminAttendanceRows(response.logs);
       } else {
         showAlert("Gagal memuat rekap absen: " + response.message, "error");
+        if (response.message && response.message.indexOf("Akses ditolak") !== -1) {
+          setTimeout(logout, 2500);
+        }
       }
     }
 
