@@ -755,13 +755,20 @@
               <p class="subtitle" style="margin: 0;">Lihat foto selfie dan detail lokasi koordinat absensi siswa</p>
             </div>
             
-            <div class="form-group" style="margin: 0; min-width: 220px;">
-              <label class="form-label" for="admin-class-filter">Filter Kelas</label>
-              <select class="input-premium" id="admin-class-filter" onchange="refreshAdminDashboard()">
-                <option value="all">Semua Kelas</option>
-                <option value="XI RPL">XI RPL</option>
-                <option value="XII RPL">XII RPL</option>
-              </select>
+            <div style="display: flex; gap: 16px; flex-wrap: wrap; align-items: center;">
+              <div class="form-group" style="margin: 0; min-width: 170px;">
+                <label class="form-label" for="admin-date-filter">Filter Tanggal</label>
+                <input type="date" class="input-premium" id="admin-date-filter" onchange="applyAdminFilters()">
+              </div>
+              
+              <div class="form-group" style="margin: 0; min-width: 170px;">
+                <label class="form-label" for="admin-class-filter">Filter Kelas</label>
+                <select class="input-premium" id="admin-class-filter" onchange="refreshAdminDashboard()">
+                  <option value="all">Semua Kelas</option>
+                  <option value="XI RPL">XI RPL</option>
+                  <option value="XII RPL">XII RPL</option>
+                </select>
+              </div>
             </div>
           </div>
 
@@ -847,6 +854,7 @@
     let capturedBlobBase64 = null;
     let streamRef = null;
     let isMockMode = false;
+    let allAdminLogs = [];
 
     // Detect environment (Automatically run Live Mode on web domains; fallback to Mock Mode on local files)
     function detectEnvironment() {
@@ -1192,6 +1200,9 @@
       const initials = currentUser.name.split(' ').map(n => n[0]).join('').substring(0, 2);
       const adminAvatar = document.getElementById('admin-avatar-initial');
       if (adminAvatar) adminAvatar.innerText = initials;
+      
+      const dateFilter = document.getElementById('admin-date-filter');
+      if (dateFilter) dateFilter.value = "";
       
       switchView('admin');
       refreshAdminDashboard();
@@ -1589,13 +1600,82 @@
       });
 
       if (response.success) {
-        renderAdminAttendanceRows(response.logs);
+        allAdminLogs = response.logs;
+        applyAdminFilters();
       } else {
         showAlert("Gagal memuat rekap absen: " + response.message, "error");
         if (response.message && response.message.indexOf("Akses ditolak") !== -1) {
           setTimeout(logout, 2500);
         }
       }
+    }
+
+    // Apply both class filter (already applied via API fetch) and date filter locally
+    function applyAdminFilters() {
+      const dateFilterVal = document.getElementById('admin-date-filter').value;
+      
+      let filteredLogs = allAdminLogs;
+      if (dateFilterVal) {
+        filteredLogs = allAdminLogs.filter(log => {
+          const logDateStr = getStandardDateString(log.timestamp);
+          return logDateStr === dateFilterVal;
+        });
+      }
+      
+      renderAdminAttendanceRows(filteredLogs);
+    }
+
+    // Helper to extract a standardized YYYY-MM-DD date string from the log timestamp
+    function getStandardDateString(timestampStr) {
+      if (!timestampStr) return null;
+      
+      // 1. Try browser native Date parsing (covers ISO, standard US timestamps like "7/27/2026, 11:09:58 AM")
+      const parsed = new Date(timestampStr);
+      if (!isNaN(parsed.getTime())) {
+        const y = parsed.getFullYear();
+        const m = String(parsed.getMonth() + 1).padStart(2, '0');
+        const d = String(parsed.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
+      }
+      
+      // 2. Manual fallback parsing for custom formats e.g. "27/7/2026 11.09.58"
+      try {
+        const cleanStr = timestampStr.split(',')[0].split(' ')[0].trim();
+        const parts = cleanStr.split(/[-/]/);
+        if (parts.length === 3) {
+          let day, month, year;
+          if (parts[2].length === 4) { // D/M/YYYY or M/D/YYYY
+            year = parseInt(parts[2], 10);
+            const p0 = parseInt(parts[0], 10);
+            const p1 = parseInt(parts[1], 10);
+            if (p0 > 12) {
+              day = p0;
+              month = p1;
+            } else if (p1 > 12) {
+              day = p1;
+              month = p0;
+            } else {
+              // Ambiguous, default to Day/Month/Year (Indonesian system default)
+              day = p0;
+              month = p1;
+            }
+          } else if (parts[0].length === 4) { // YYYY-MM-DD
+            year = parseInt(parts[0], 10);
+            month = parseInt(parts[1], 10);
+            day = parseInt(parts[2], 10);
+          }
+          
+          if (year && month && day) {
+            const mm = String(month).padStart(2, '0');
+            const dd = String(day).padStart(2, '0');
+            return `${year}-${mm}-${dd}`;
+          }
+        }
+      } catch (e) {
+        console.error("Gagal parsing manual tanggal: ", e);
+      }
+      
+      return null;
     }
 
     function renderAdminAttendanceRows(logs) {
