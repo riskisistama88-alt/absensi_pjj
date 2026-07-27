@@ -747,6 +747,73 @@
           </div>
         </div>
 
+        <!-- SECTION 1: KEHADIRAN HARI INI (REAL-TIME) -->
+        <div style="margin-bottom: 32px;">
+          <h3 style="font-size: 20px; font-weight: 500; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+            <i data-lucide="activity" style="color: #10b981; width: 22px; height: 22px;"></i> Kehadiran Hari Ini (Real-Time)
+          </h3>
+          
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px;">
+            <!-- Column XI RPL -->
+            <div class="card-premium" style="padding: 24px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid var(--hairline-light); padding-bottom: 12px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span class="badge" style="background-color: var(--pistachio-10); font-weight: 600;">XI RPL</span>
+                  <span style="font-size: 14px; color: var(--shade-60);">Kehadiran Hari Ini</span>
+                </div>
+                <span class="badge" id="count-today-xi" style="background-color: var(--ink); color: white; font-weight: 600;">0 Siswa</span>
+              </div>
+              <div class="table-container" style="max-height: 350px; overflow-y: auto;">
+                <table class="history-table">
+                  <thead>
+                    <tr>
+                      <th style="width: 50px;">Foto</th>
+                      <th>Siswa</th>
+                      <th>Waktu</th>
+                    </tr>
+                  </thead>
+                  <tbody id="today-list-xi">
+                    <tr>
+                      <td colspan="3" style="text-align: center; color: var(--shade-50); padding: 30px 0; font-size: 13px;">
+                        Belum ada yang absen hari ini.
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Column XII RPL -->
+            <div class="card-premium" style="padding: 24px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid var(--hairline-light); padding-bottom: 12px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span class="badge" style="background-color: var(--pistachio-10); font-weight: 600;">XII RPL</span>
+                  <span style="font-size: 14px; color: var(--shade-60);">Kehadiran Hari Ini</span>
+                </div>
+                <span class="badge" id="count-today-xii" style="background-color: var(--ink); color: white; font-weight: 600;">0 Siswa</span>
+              </div>
+              <div class="table-container" style="max-height: 350px; overflow-y: auto;">
+                <table class="history-table">
+                  <thead>
+                    <tr>
+                      <th style="width: 50px;">Foto</th>
+                      <th>Siswa</th>
+                      <th>Waktu</th>
+                    </tr>
+                  </thead>
+                  <tbody id="today-list-xii">
+                    <tr>
+                      <td colspan="3" style="text-align: center; color: var(--shade-50); padding: 30px 0; font-size: 13px;">
+                        Belum ada yang absen hari ini.
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Tab 1: Rekap Absensi (Kehadiran & Foto) -->
         <div class="card-premium" style="margin-bottom: 32px;">
           <div style="display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 24px; flex-wrap: wrap;">
@@ -1582,7 +1649,6 @@
     // Load Rekap Absensi (Kehadiran & Foto) for Admin Panel
     async function loadAttendanceLogs() {
       const attendanceList = document.getElementById('admin-attendance-list');
-      const filter = document.getElementById('admin-class-filter').value;
       
       attendanceList.innerHTML = `
         <tr>
@@ -1593,10 +1659,11 @@
       `;
       lucide.createIcons();
 
+      // Always fetch all logs so we can separate them by class for today's real-time dashboard
       const response = await callAPI("getAllAttendanceLogs", {
         adminUsername: currentUser.username,
         adminPasswordMd5: currentUser.passwordHash,
-        classFilter: filter
+        classFilter: "all"
       });
 
       if (response.success) {
@@ -1610,19 +1677,96 @@
       }
     }
 
-    // Apply both class filter (already applied via API fetch) and date filter locally
+    // Apply both class filter and date filter locally for history, and populate today's dashboard
     function applyAdminFilters() {
+      const classFilterVal = document.getElementById('admin-class-filter').value;
       const dateFilterVal = document.getElementById('admin-date-filter').value;
       
+      // 1. Process Today's Dashboard (Real-Time)
+      const todayStr = getStandardDateString(new Date().toISOString());
+      
+      // Filter for today's logs
+      const todayLogs = allAdminLogs.filter(log => {
+        return getStandardDateString(log.timestamp) === todayStr;
+      });
+      
+      // Separate by class
+      const todayXI = todayLogs.filter(log => log.className === "XI RPL");
+      const todayXII = todayLogs.filter(log => log.className === "XII RPL");
+      
+      // Render Today's XI RPL
+      const todayListXI = document.getElementById('today-list-xi');
+      document.getElementById('count-today-xi').innerText = `${todayXI.length} Siswa`;
+      if (todayXI.length === 0) {
+        todayListXI.innerHTML = `
+          <tr>
+            <td colspan="3" style="text-align: center; color: var(--shade-50); padding: 30px 0; font-size: 13px;">
+              Belum ada yang absen hari ini.
+            </td>
+          </tr>
+        `;
+      } else {
+        todayListXI.innerHTML = todayXI.map(log => `
+          <tr>
+            <td>
+              <img src="${log.selfieUrl}" class="history-thumbnail" style="width: 36px; height: 27px;" alt="Selfie" onclick="openPhotoModal('${log.selfieUrl}')">
+            </td>
+            <td>
+              <div style="font-weight: 500; font-size: 13px;">${log.name}</div>
+              <div style="font-size: 11px; color: var(--shade-60);"><code>${log.username}</code></div>
+            </td>
+            <td style="font-size: 12px; color: var(--shade-70); font-weight: 500; vertical-align: middle;">
+              ${log.timestamp.split(',')[1] ? log.timestamp.split(',')[1].trim() : log.timestamp}
+            </td>
+          </tr>
+        `).join('');
+      }
+      
+      // Render Today's XII RPL
+      const todayListXII = document.getElementById('today-list-xii');
+      document.getElementById('count-today-xii').innerText = `${todayXII.length} Siswa`;
+      if (todayXII.length === 0) {
+        todayListXII.innerHTML = `
+          <tr>
+            <td colspan="3" style="text-align: center; color: var(--shade-50); padding: 30px 0; font-size: 13px;">
+              Belum ada yang absen hari ini.
+            </td>
+          </tr>
+        `;
+      } else {
+        todayListXII.innerHTML = todayXII.map(log => `
+          <tr>
+            <td>
+              <img src="${log.selfieUrl}" class="history-thumbnail" style="width: 36px; height: 27px;" alt="Selfie" onclick="openPhotoModal('${log.selfieUrl}')">
+            </td>
+            <td>
+              <div style="font-weight: 500; font-size: 13px;">${log.name}</div>
+              <div style="font-size: 11px; color: var(--shade-60);"><code>${log.username}</code></div>
+            </td>
+            <td style="font-size: 12px; color: var(--shade-70); font-weight: 500; vertical-align: middle;">
+              ${log.timestamp.split(',')[1] ? log.timestamp.split(',')[1].trim() : log.timestamp}
+            </td>
+          </tr>
+        `).join('');
+      }
+      
+      // 2. Process Historical Logs Table
       let filteredLogs = allAdminLogs;
+      
+      // Class Filter
+      if (classFilterVal !== "all") {
+        filteredLogs = filteredLogs.filter(log => log.className === classFilterVal);
+      }
+      
+      // Date Filter
       if (dateFilterVal) {
-        filteredLogs = allAdminLogs.filter(log => {
-          const logDateStr = getStandardDateString(log.timestamp);
-          return logDateStr === dateFilterVal;
+        filteredLogs = filteredLogs.filter(log => {
+          return getStandardDateString(log.timestamp) === dateFilterVal;
         });
       }
       
       renderAdminAttendanceRows(filteredLogs);
+      lucide.createIcons();
     }
 
     // Helper to extract a standardized YYYY-MM-DD date string from the log timestamp
